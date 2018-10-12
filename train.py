@@ -12,25 +12,7 @@ from keras.layers import Conv2D, MaxPooling2D, Dropout, Flatten, Dense, Activati
 from keras_preprocessing.image import ImageDataGenerator
 from sklearn.preprocessing import MultiLabelBinarizer, LabelBinarizer
 
-IMAGE_FOLDER = "/home/elmihailol/datasets/images"
-PHOTO_FOLDER = "/home/elmihailol/datasets/photos"
-SCREENSHOT_FOLDER = "/home/elmihailol/datasets/screenshots"
-MAX_IMAGES = 10000
-
-HEIGHT = 128
-WIDTH = 128
-
-# os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # see issue #152
-# os.environ["CUDA_VISIBLE_DEVICES"] = ""
-
-
-def get_im(path):
-    # Load as grayscale
-    img = cv2.imread(path, 0)
-    # Reduce size
-    resized = cv2.resize(img, (HEIGHT, WIDTH))
-    return resized
-
+from helpers import MAX_IMAGES, IMAGE_FOLDER, PHOTO_FOLDER, SCREENSHOT_FOLDER, HEIGHT, WIDTH, get_im
 
 IMAGES_FOLDER_LIST = os.listdir(IMAGE_FOLDER)
 PHOTO_FOLDER_LIST = os.listdir(PHOTO_FOLDER)
@@ -82,12 +64,12 @@ mlb.fit(dataY)
 dataY = mlb.transform(dataY)
 print("dataX:", len(dataX))
 print("dataY:", len(dataY))
+
 for i in range(len(dataY)):
     print(dataY[i])
 dataX = numpy.array(dataX) / 256
 dataX = dataX.reshape((-1, HEIGHT, WIDTH, 1))
-print(dataX.shape)
-# exit()
+
 inputShape = (HEIGHT, WIDTH, 1)
 model = Sequential()
 model.add(Conv2D(32, kernel_size=(3, 3),
@@ -117,12 +99,11 @@ model.add(Dense(128, activation='relu'))
 model.add(Dropout(0.6))
 model.add(Dense(3, activation='softmax'))
 
-# model.save("mode2l.h5")
 mlb = joblib.load("lb.sav")
 model.compile(loss="categorical_crossentropy",
               optimizer="adam",
               metrics=['accuracy'])
-model = load_model("mode2l.h5")
+model = load_model("model.h5")
 
 dataX = dataX.tolist()
 dataY = dataY.tolist()

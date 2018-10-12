@@ -11,34 +11,21 @@ WIDTH = 128
 
 
 def get_im(path):
-    # Load as grayscale
+    # Загружаем изображение
     img = cv2.imread(path, 0)
-    # Reduce size
+    # Конвертируем изображение
     resized = cv2.resize(img, (HEIGHT, WIDTH))
     return resized
 
-def get_image_from_url(url):
-    img = url_to_image(url)
-    resized = cv2.resize(img, (HEIGHT, WIDTH))
-    return resized
 
-def url_to_image(url):
-    # download the image, convert it to a NumPy array, and then read
-    # it into OpenCV format
-    resp = urllib.urlopen(url)
-    image = numpy.asarray(bytearray(resp.read()), dtype="uint8")
-    image = cv2.imdecode(image, cv2.IMREAD_COLOR)
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # see issue #152
+os.environ["CUDA_VISIBLE_DEVICES"] = ""
 
-    # return the image
-    return image
-
-# os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # see issue #152
-# os.environ["CUDA_VISIBLE_DEVICES"] = ""
-
-model = load_model("mode2l.h5")
+model = load_model("model.h5")
 lb = joblib.load("lb.sav")
 print(lb.classes_)
 while 1:
+    print("Путь до файла: ")
     inp = input()
     dataX = []
     binary_image = get_im(inp)
@@ -46,5 +33,6 @@ while 1:
     dataX = numpy.array(dataX)/255
     dataX = dataX.reshape((-1, HEIGHT, WIDTH, 1))
     print(dataX.shape)
-    pred = model.predict(dataX)
-    print(pred)
+    pred = list(model.predict(dataX)[0])
+    for i in range(len(pred)):
+        print(lb.classes_[i],pred[i])
