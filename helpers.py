@@ -1,13 +1,13 @@
-import cv2
+import os
 
-HEIGHT = 128
-WIDTH = 128
-MAX_IMAGES = 10000
-IMAGE_FOLDER = "/home/elmihailol/datasets/images"
-PHOTO_FOLDER = "/home/elmihailol/datasets/photos"
-SCREENSHOT_FOLDER = "/home/elmihailol/datasets/screenshots"
+import cv2
+from scipy.misc import imresize
+from scipy.misc import imread
+
+from config import HEIGHT, WIDTH
+
 
 def get_im(path):
-    img = cv2.imread(path, 0)
-    resized = cv2.resize(img, (HEIGHT, WIDTH))
-    return resized
+    x = imread(path, mode='L')
+    x = imresize(x, (HEIGHT, WIDTH))
+    return x.reshape(1, HEIGHT, WIDTH, 1) / 255

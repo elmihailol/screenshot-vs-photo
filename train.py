@@ -12,17 +12,18 @@ from keras.layers import Conv2D, MaxPooling2D, Dropout, Flatten, Dense, Activati
 from keras_preprocessing.image import ImageDataGenerator
 from sklearn.preprocessing import MultiLabelBinarizer, LabelBinarizer
 
-from helpers import MAX_IMAGES, IMAGE_FOLDER, PHOTO_FOLDER, SCREENSHOT_FOLDER, HEIGHT, WIDTH, get_im
+from config import IMAGES_PATH
+from helpers import get_im
 
-IMAGES_FOLDER_LIST = os.listdir(IMAGE_FOLDER)
-PHOTO_FOLDER_LIST = os.listdir(PHOTO_FOLDER)
-SCREENSHOT_FOLDER_LIST = os.listdir(SCREENSHOT_FOLDER)
+IMAGES_FOLDER_LIST = IMAGES_PATH["picture"]
+PHOTO_FOLDER_LIST = IMAGES_PATH["photo"]
+SCREENSHOT_FOLDER_LIST = IMAGES_PATH["screenshot"]
 
 IMAGES_DATA = []
 PHOTO_DATA = []
 SCREENSHOT_DATA = []
 print("Получаем обычные картинки...")
-for i in range(MAX_IMAGES):
+for i in range(IMAGES_PATH):
     print(i)
     try:
         binary_image = get_im(IMAGE_FOLDER + "/" + IMAGES_FOLDER_LIST[i])
@@ -51,13 +52,13 @@ dataX = []
 dataY = []
 
 dataX.extend(IMAGES_DATA)
-dataY.extend(["Обычная"] * len(IMAGES_DATA))
+dataY.extend(["Картинка"] * len(IMAGES_DATA))
 
 dataX.extend(SCREENSHOT_DATA)
 dataY.extend(["Скриншот"] * len(SCREENSHOT_DATA))
 
 dataX.extend(PHOTO_DATA)
-dataY.extend(["Фото"] * len(PHOTO_DATA))
+dataY.extend(["Фотография"] * len(PHOTO_DATA))
 
 mlb = LabelBinarizer()
 mlb.fit(dataY)
@@ -103,6 +104,7 @@ mlb = joblib.load("lb.sav")
 model.compile(loss="categorical_crossentropy",
               optimizer="adam",
               metrics=['accuracy'])
+
 model = load_model("model.h5")
 
 dataX = dataX.tolist()

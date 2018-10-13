@@ -6,23 +6,11 @@ import joblib
 import numpy
 from keras.engine.saving import load_model
 
-HEIGHT = 128
-WIDTH = 128
+from helpers import get_im, HEIGHT, WIDTH
 
 
-def get_im(path):
-    # Загружаем изображение
-    img = cv2.imread(path, 0)
-    # Конвертируем изображение
-    resized = cv2.resize(img, (HEIGHT, WIDTH))
-    return resized
-
-
-os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"  # see issue #152
-os.environ["CUDA_VISIBLE_DEVICES"] = ""
-
-model = load_model("model.h5")
-lb = joblib.load("lb.sav")
+model = load_model("model.h5",)
+lb = joblib.load("mlb.sav")
 print(lb.classes_)
 while 1:
     print("Путь до файла: ")
