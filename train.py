@@ -1,154 +1,119 @@
-import os
+import configparser
 import random
 
-import cv2
-import joblib
-import keras
-import numpy
-import tensorflow
-from keras import Sequential
-from keras.engine.saving import load_model
-from keras.layers import Conv2D, MaxPooling2D, Dropout, Flatten, Dense, Activation
-from keras_preprocessing.image import ImageDataGenerator
-from sklearn.preprocessing import MultiLabelBinarizer, LabelBinarizer
+import os
 
-from config import IMAGES_PATH
+from models import image_net_model, conv2d_model
+
+#os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
+import joblib
+import numpy
+import os
+import sys
+import tensorflow as tf
+
+from keras import Sequential, Input, Model
+from keras.applications import InceptionV3, VGG16, MobileNetV2
+from keras.engine.saving import load_model
+from keras.layers import Conv2D, MaxPooling2D, Activation, Dense, Dropout, Flatten, GlobalAveragePooling2D
+from keras_preprocessing.image import ImageDataGenerator
+from sklearn.cross_validation import train_test_split
+from sklearn.preprocessing import LabelBinarizer
+
+from config import IMAGES_PATH, MAXIMUM_IMAGES_PER_CLASS, HEIGHT, WIDTH, TRAIN_MODE
 from helpers import get_im
 
-IMAGES_FOLDER_LIST = IMAGES_PATH["picture"]
-PHOTO_FOLDER_LIST = IMAGES_PATH["photo"]
-SCREENSHOT_FOLDER_LIST = IMAGES_PATH["screenshot"]
 
-IMAGES_DATA = []
-PHOTO_DATA = []
-SCREENSHOT_DATA = []
-print("Получаем обычные картинки...")
-for i in range(IMAGES_PATH):
-    print(i)
-    try:
-        binary_image = get_im(IMAGE_FOLDER + "/" + IMAGES_FOLDER_LIST[i])
-        IMAGES_DATA.append([binary_image])
-    except Exception as e:
-        print(repr(e))
 
-    try:
-        binary_image = get_im(PHOTO_FOLDER + "/" + PHOTO_FOLDER_LIST[i])
-        PHOTO_DATA.append([binary_image])
-    except Exception as e:
-        print(repr(e))
+class ImageContainer:
+    def __init__(self, data_path):
+        """
+        Создает контейнер с изображениями
+        :param data_path: dict {class1: path1, class2: path2, ....}
+        """
+        self.images = {}
+        for key, val in data_path.items():
+            counter = 0
+            self.images[key] = []
+            print(key, val)
+            folder_list = os.listdir(val)
+            for file in folder_list:
+                if counter >= MAXIMUM_IMAGES_PER_CLASS:
+                    break
+                try:
+                    binary_image = get_im(val + "/" + file)
+                    self.images[key].append(binary_image[0])
+                    counter += 1
+                except Exception as e:
+                    print(repr(e))
 
-    try:
-        binary_image = get_im(SCREENSHOT_FOLDER + "/" + SCREENSHOT_FOLDER_LIST[i])
-        SCREENSHOT_DATA.append([binary_image])
-    except Exception as e:
-        print(repr(e))
-        continue
+        for key, val in self.images.items():
+            print(key, len(val))
 
-print("Обычных картинок:", len(IMAGES_DATA))
-print("Скриншотов:", len(SCREENSHOT_DATA))
-print("Фотографий:", len(PHOTO_DATA))
+    def get_data_images(self):
+        dataX = []
+        dataY = []
+        for key, val in self.images.items():
+            print(key, len(val))
+            dataX.extend(val)
+            dataY.extend([key]*len(val))
 
-dataX = []
-dataY = []
+        c = list(zip(dataX, dataY))
+        random.shuffle(c)
+        dataX, dataY = zip(*c)
 
-dataX.extend(IMAGES_DATA)
-dataY.extend(["Картинка"] * len(IMAGES_DATA))
+        dataX = numpy.array(dataX)
+        lb = LabelBinarizer()
+        lb.fit(dataY)
+        lb = joblib.load("lb.sav")
+        dataY = lb.transform(dataY)
+        dataY = numpy.array(dataY)
+        print(dataX.shape)
+        return dataX, dataY
 
-dataX.extend(SCREENSHOT_DATA)
-dataY.extend(["Скриншот"] * len(SCREENSHOT_DATA))
 
-dataX.extend(PHOTO_DATA)
-dataY.extend(["Фотография"] * len(PHOTO_DATA))
 
-mlb = LabelBinarizer()
-mlb.fit(dataY)
-dataY = mlb.transform(dataY)
-print("dataX:", len(dataX))
-print("dataY:", len(dataY))
+def main(argv=None, model="default"):
+    print("Read Config")
+    ic = ImageContainer(IMAGES_PATH)
+    dataX, dataY = ic.get_data_images()
+    print("dataX:", len(dataX))
+    print("dataY:", len(dataY))
+    if model == "default":
+        model = conv2d_model(output_len=3)
+    if model == "image_net_model":
+        model = image_net_model()
+    x_train, x_test, y_train, y_test = train_test_split(dataX, dataY, test_size=0.3)
 
-for i in range(len(dataY)):
-    print(dataY[i])
-dataX = numpy.array(dataX) / 256
-dataX = dataX.reshape((-1, HEIGHT, WIDTH, 1))
+    datagen = ImageDataGenerator(
+        featurewise_center=False,
+        samplewise_center=False,
+        featurewise_std_normalization=False,
+        samplewise_std_normalization=False,
+        zca_whitening=False,
+        rotation_range=90,
+        zoom_range=0.4,
+        width_shift_range=0.4,
+        height_shift_range=0.4,
+        horizontal_flip=False,
+        vertical_flip=False)
 
-inputShape = (HEIGHT, WIDTH, 1)
-model = Sequential()
-model.add(Conv2D(32, kernel_size=(3, 3),
-                 activation='relu',
-                 input_shape=inputShape))
-model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
+    print("start")
+    max_acc = 0
+    for i in range(100):
+        if TRAIN_MODE == 1:
+            model.fit_generator(datagen.flow(x_train, y_train, batch_size=16),
+                                    epochs=1, steps_per_epoch=512,
+                                    verbose=1)
+        else:
+            model.fit(x_train, y_train, batch_size=16, verbose=1)
+        acc = model.evaluate(x_test, y_test)[1]
+        print(acc, max_acc)
+        if max_acc < acc:
+            max_acc = acc
+            model.save("model.h5")
 
-model.add(Conv2D(32, (3, 3)))
-model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
 
-model.add(Conv2D(32, (3, 3)))
-model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-
-model.add(Conv2D(64, (3, 3)))
-model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-
-model.add(Conv2D(64, (3, 3)))
-model.add(Activation('relu'))
-model.add(MaxPooling2D(pool_size=(2, 2)))
-
-model.add(Flatten())
-model.add(Dense(128, activation='relu'))
-model.add(Dropout(0.6))
-model.add(Dense(3, activation='softmax'))
-
-mlb = joblib.load("lb.sav")
-model.compile(loss="categorical_crossentropy",
-              optimizer="adam",
-              metrics=['accuracy'])
-
-model = load_model("model.h5")
-
-dataX = dataX.tolist()
-dataY = dataY.tolist()
-c = list(zip(dataX, dataY))
-
-random.shuffle(c)
-
-dataX, dataY = zip(*c)
-train_size = int(len(dataX) * 0.8)
-
-print(dataX[0])
-trainX = dataX[:train_size]
-testX = dataX[train_size:]
-
-trainY = dataY[:train_size]
-testY = dataY[train_size:]
-
-trainX = numpy.array(trainX)
-trainY = numpy.array(trainY)
-testX = numpy.array(testX)
-testY = numpy.array(testY)
-
-datagen = ImageDataGenerator(
-    featurewise_center=False,
-    samplewise_center=False,
-    featurewise_std_normalization=False,
-    samplewise_std_normalization=False,
-    zca_whitening=False,
-    rotation_range=90,
-    zoom_range=0.4,
-    width_shift_range=0.4,
-    height_shift_range=0.4,
-    horizontal_flip=False,
-    vertical_flip=False)
-
-print("start")
-max_acc = 0
-for i in range(100):
-    h = model.fit_generator(datagen.flow(trainX, trainY, batch_size=128),
-                            epochs=1, steps_per_epoch=256,
-                            verbose=1)
-    acc = model.evaluate(testX, testY)[1]
-    if max_acc < acc:
-        max_acc = acc
-        model.save("model.h5")
-    print(acc, max_acc)
+if __name__ == "__main__":
+    sys.exit(main())
