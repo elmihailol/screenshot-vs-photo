@@ -38,7 +38,7 @@ class ImageContainer:
             counter = 0
             for file in folder_list:
                 if counter % 10 == 0:
-                    print(counter,"/", MAXIMUM_IMAGES_PER_CLASS)
+                    print(counter, "/", MAXIMUM_IMAGES_PER_CLASS)
                 if counter >= MAXIMUM_IMAGES_PER_CLASS:
                     break
                 try:
@@ -52,12 +52,16 @@ class ImageContainer:
             print(key, len(val))
 
     def get_data_images(self):
+        """
+        Конвертируем изображения в матрицу
+        :return: dataX, dataY
+        """
         dataX = []
         dataY = []
         for key, val in self.images.items():
             print(key, len(val))
             dataX.extend(val)
-            dataY.extend([key]*len(val))
+            dataY.extend([key] * len(val))
 
         c = list(zip(dataX, dataY))
         random.shuffle(c)
@@ -74,10 +78,7 @@ class ImageContainer:
         return dataX, dataY
 
 
-
 def main(argv=None):
-
-
     print("Read Config")
     ic = ImageContainer(IMAGES_PATH)
     dataX, dataY = ic.get_data_images()
@@ -91,7 +92,6 @@ def main(argv=None):
     if MODEL_TYPE == "ImageNet":
         model = image_net_model()
     x_train, x_test, y_train, y_test = train_test_split(dataX, dataY, test_size=0.2)
-
 
     print("start")
 
@@ -110,7 +110,6 @@ def main(argv=None):
 
     model.fit(x_train, y_train, batch_size=BATCH_SIZE, verbose=1,
               callbacks=callbacks, validation_data=(x_test, y_test), epochs=100)
-
 
 
 if __name__ == "__main__":
