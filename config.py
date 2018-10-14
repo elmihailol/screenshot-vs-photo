@@ -6,7 +6,7 @@ IMAGES_PATH = {
 }
 
 # Максимальное кол-во изображений в обучающей выборке
-MAXIMUM_IMAGES_PER_CLASS = 2500
+MAXIMUM_IMAGES_PER_CLASS = 250
 BATCH_SIZE = 8
 # Тип модели
 # default - новая Conv2D
@@ -16,7 +16,7 @@ MODEL_TYPE = "loaded"
 
 # 0 - Обучаем НС без ImageGenerator'a
 # 1 - C ImageGenerator
-TRAIN_MODE = 0
+TRAIN_MODE = 1
 
 # Размер изображения
 HEIGHT = 128
