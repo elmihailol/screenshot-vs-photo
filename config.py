@@ -6,7 +6,7 @@ IMAGES_PATH = {
 }
 
 # Максимальное кол-во изображений в обучающей выборке
-MAXIMUM_IMAGES_PER_CLASS = 250
+MAXIMUM_IMAGES_PER_CLASS = 2000
 BATCH_SIZE = 8
 # Тип модели
 # default - новая Conv2D

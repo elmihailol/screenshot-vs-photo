@@ -1,4 +1,7 @@
 import os
+
+from keras.callbacks import ModelCheckpoint, EarlyStopping
+
 from config import IMAGES_PATH, MAXIMUM_IMAGES_PER_CLASS, HEIGHT, WIDTH, TRAIN_MODE, MODEL_TYPE, GPU_USAGE, BATCH_SIZE
 
 if not GPU_USAGE:
@@ -22,7 +25,6 @@ from sklearn.cross_validation import train_test_split
 from sklearn.preprocessing import LabelBinarizer
 
 from helpers import get_im
-
 
 
 class ImageContainer:
@@ -79,6 +81,8 @@ class ImageContainer:
 
 
 def main(argv=None):
+
+
     print("Read Config")
     ic = ImageContainer(IMAGES_PATH)
     dataX, dataY = ic.get_data_images()
@@ -93,33 +97,26 @@ def main(argv=None):
         model = image_net_model()
     x_train, x_test, y_train, y_test = train_test_split(dataX, dataY, test_size=0.2)
 
-    datagen = ImageDataGenerator(
-        featurewise_center=False,
-        samplewise_center=False,
-        featurewise_std_normalization=False,
-        samplewise_std_normalization=False,
-        zca_whitening=False,
-        rotation_range=90,
-        zoom_range=0.4,
-        width_shift_range=0.4,
-        height_shift_range=0.4,
-        horizontal_flip=False,
-        vertical_flip=False)
 
     print("start")
-    max_acc = 0
+
+    callbacks = [
+        EarlyStopping(
+            monitor='val_acc',
+            patience=10,
+            mode='max',
+            verbose=1),
+        ModelCheckpoint("model.h5",
+                        monitor='val_acc',
+                        save_best_only=True,
+                        mode='max',
+                        verbose=1)
+    ]
+    
     for i in range(100):
-        if TRAIN_MODE == 1:
-            model.fit_generator(datagen.flow(x_train, y_train, batch_size=BATCH_SIZE),
-                                    epochs=1, steps_per_epoch=int(MAXIMUM_IMAGES_PER_CLASS/BATCH_SIZE),
-                                    verbose=1)
-        else:
-            model.fit(x_train, y_train, batch_size=BATCH_SIZE, verbose=1)
-        acc = model.evaluate(x_test, y_test)[1]
-        print(acc, max_acc)
-        if max_acc < acc:
-            max_acc = acc
-            model.save("model.h5")
+        model.fit(x_train, y_train, batch_size=BATCH_SIZE, verbose=1,
+                  callbacks=callbacks, validation_data=(x_test, y_test))
+
 
 
 if __name__ == "__main__":
