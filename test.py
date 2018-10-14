@@ -17,7 +17,7 @@ print(lb.classes_)
 while 1:
     try:
         print("\nРасположение изображения:")
-        inp = input()
+        inp = "test/"+input()
 
         x = imread(inp, mode='L')
         x = imresize(x, (WIDTH, HEIGHT))
