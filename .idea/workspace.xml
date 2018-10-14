@@ -22,6 +22,7 @@
       </usages-collector>
       <usages-collector id="statistics.file.extensions.open">
         <counts>
+          <entry key="LICENSE" value="1" />
           <entry key="PNG" value="2" />
           <entry key="ini" value="3" />
           <entry key="jpeg" value="5" />
@@ -35,20 +36,20 @@
         <counts>
           <entry key="Image" value="87" />
           <entry key="Markdown" value="1" />
-          <entry key="PLAIN_TEXT" value="3" />
+          <entry key="PLAIN_TEXT" value="4" />
           <entry key="Python" value="32" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.extensions.edit">
         <counts>
           <entry key="ini" value="106" />
-          <entry key="md" value="150" />
+          <entry key="md" value="283" />
           <entry key="py" value="4052" />
         </counts>
       </usages-collector>
       <usages-collector id="statistics.file.types.edit">
         <counts>
-          <entry key="Markdown" value="150" />
+          <entry key="Markdown" value="283" />
           <entry key="PLAIN_TEXT" value="106" />
           <entry key="Python" value="4052" />
         </counts>
@@ -557,6 +558,9 @@
           </folding>
         </state>
       </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/LICENSE">
+      <provider selected="true" editor-type-id="text-editor" />
     </entry>
     <entry file="file://$PROJECT_DIR$/readme.md">
       <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
