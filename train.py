@@ -2,25 +2,20 @@ import os
 
 from keras.callbacks import ModelCheckpoint, EarlyStopping
 
-from config import IMAGES_PATH, MAXIMUM_IMAGES_PER_CLASS, HEIGHT, WIDTH, TRAIN_MODE, MODEL_TYPE, GPU_USAGE, BATCH_SIZE
+from config import IMAGES_PATH, MAXIMUM_IMAGES_PER_CLASS, HEIGHT, WIDTH, MODEL_TYPE, GPU_USAGE, BATCH_SIZE
 
 if not GPU_USAGE:
     os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
-import configparser
 import random
 from models import image_net_model, conv2d_model
 import joblib
 import numpy
 import os
 import sys
-import tensorflow as tf
 
-from keras import Sequential, Input, Model
-from keras.applications import InceptionV3, VGG16, MobileNetV2
 from keras.engine.saving import load_model
-from keras.layers import Conv2D, MaxPooling2D, Activation, Dense, Dropout, Flatten, GlobalAveragePooling2D
-from keras_preprocessing.image import ImageDataGenerator
+
 from sklearn.cross_validation import train_test_split
 from sklearn.preprocessing import LabelBinarizer
 
@@ -112,10 +107,9 @@ def main(argv=None):
                         mode='max',
                         verbose=1)
     ]
-    
-    for i in range(100):
-        model.fit(x_train, y_train, batch_size=BATCH_SIZE, verbose=1,
-                  callbacks=callbacks, validation_data=(x_test, y_test))
+
+    model.fit(x_train, y_train, batch_size=BATCH_SIZE, verbose=1,
+              callbacks=callbacks, validation_data=(x_test, y_test), epochs=100)
 
 
 
